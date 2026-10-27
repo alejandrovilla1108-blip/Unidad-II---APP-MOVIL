@@ -13,21 +13,32 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.motionEventSpy
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,99 +50,65 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            aforoScreen()
+            lecturaScreen()
         }
-    }
-
-    @Composable
-    fun aforoScreen() {
-        var actuales by remember { mutableStateOf(0) }
-        var visitasDelDia by remember { mutableStateOf(0) }
-        val porcentaje = actuales / 50f
-        val colorAforo = when {
-            porcentaje < 0.70f -> Color(0xFF2E7D32)
-            porcentaje < 1.0f -> Color(0xFFFFA000)
-            else -> Color(0xFFC62828)
-        }
-
-        Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-            Text("Biblioteca Central", fontSize = 25.sp)
-            Text("Sala de estudio • capacidad 50", fontSize = 14.sp)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Gray)
-                    .border(2.dp, Color.DarkGray, RoundedCornerShape(8.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("$actuales / 50", fontSize = 50.sp, color = colorAforo)
-                Text("personas en la sala", textAlign = TextAlign.Center)
-                LinearProgressIndicator(
-                    progress = { porcentaje },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = colorAforo
-                )
-                Text("${(porcentaje * 100).toInt()} % de ocupación", color = colorAforo)
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = {
-                        if (actuales < 50) {
-                            actuales = actuales + 1
-                            visitasDelDia = visitasDelDia + 1
-                        }
-                    },
-                    enabled = actuales < 50,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Entra")
-                }
-
-                Button(
-                    onClick = {
-                        if (actuales > 0) {
-                            actuales = actuales - 1
-                        }
-                    },
-                    enabled = actuales > 0,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Sale", color = Color.White)
-                }
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(8.dp).clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF1EAF7)).padding(12.dp)
-            ) {
-                Text("Visitas del día: $visitasDelDia", fontSize = 20.sp)
-            }
-
-
-            Button(
-                onClick = {
-                    actuales = 0
-                    visitasDelDia = 0
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cerrar día")
-            }
-        }
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun ver() {
-        aforoScreen()
     }
 }
-//Aforo biblioteca
+
+@Composable
+fun lecturaScreen() {
+    var tamaño by remember { mutableStateOf(14f) }
+
+    Column(modifier = Modifier.fillMaxSize().padding(28.dp)) {
+        Text(text = "Ajuste de lectura", fontSize = 30.sp)
+        Text("Tamaño ${tamaño.toInt()} sp")
+        Slider(value = tamaño,
+            onValueChange = {tamaño = it},
+            valueRange = 14f..32f)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("A", fontSize = 14.sp)
+            Text("A", fontSize = 32.sp)
+        }
+        Text("Interlineado")
+        var interlineado by remember { mutableFloatStateOf(1.3f) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RadioButton(selected = interlineado == 1.0f, onClick = { interlineado = 1.0f })
+            Text("Compacto")
+
+            RadioButton(selected = interlineado == 1.3f, onClick = { interlineado = 1.3f })
+            Text("Normal")
+
+            RadioButton(selected = interlineado == 1.6f, onClick = { interlineado = 1.6f })
+            Text("Amplio")
+        }
+        var modoOscuro by remember { mutableStateOf(false) }
+        Row( modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Modo oscuro")
+            Switch(checked = modoOscuro, onCheckedChange = {modoOscuro = it})
+        }
+        var usaSerif by remember { mutableStateOf(false) }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Fuente")
+            FilterChip( selected = usaSerif,
+                onClick = {usaSerif = !usaSerif},
+                label = { Text(if (usaSerif) "Serif" else "Sans") })
+        }
+        Text("Vista previa")
+        Box(modifier = Modifier.background(if (modoOscuro) Color.DarkGray else Color.White, RoundedCornerShape(8.dp)).width(300.dp).height(200.dp)){
+            Text("En una noche tranquila en el pueblo cuando las campanas comenzaron a sonar, y nadie supo por que", fontSize = tamaño.sp, fontFamily = if (usaSerif) FontFamily.Serif else FontFamily.SansSerif, lineHeight = (tamaño * interlineado).sp, )
+        }
+        Button(onClick = { tamaño = 18f
+            interlineado = 1.3f
+            modoOscuro = false
+            usaSerif = false
+        }) {
+            Text("Restablecer ajustes")
+        }
+    }
+}
+
+@Preview (showBackground = true)
+@Composable
+fun ver() {
+    lecturaScreen()
+}
