@@ -1,12 +1,15 @@
 package com.example.estados
 
+import android.R
 import android.R.attr.enabled
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,9 +17,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,98 +52,136 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            aforoScreen()
+            tienda()
         }
     }
+}
 
     @Composable
-    fun aforoScreen() {
-        var actuales by remember { mutableStateOf(0) }
-        var visitasDelDia by remember { mutableStateOf(0) }
-        val porcentaje = actuales / 50f
-        val colorAforo = when {
-            porcentaje < 0.70f -> Color(0xFF2E7D32)
-            porcentaje < 1.0f -> Color(0xFFFFA000)
-            else -> Color(0xFFC62828)
+    fun tienda(){
+        var tortillasPrecio = 24.00
+        var lechePrecio = 27.50
+        var HuevoPrecio = 52.00
+        var FrijolPrecio = 38.00
+        var tortillasCant by remember { mutableStateOf(0) }
+        var lecheCant by remember { mutableStateOf(0) }
+        var huevoCant by remember { mutableStateOf(0) }
+        var frijolCant by remember { mutableStateOf(0) }
+        var confirmado by remember { mutableStateOf(false) }
+        var totalTort = tortillasPrecio * tortillasCant
+        var totalLeche = lecheCant * lechePrecio
+        var totalHuevo = huevoCant * HuevoPrecio
+        var totalFrijoles = frijolCant * FrijolPrecio
+        var subTotal = totalFrijoles + totalHuevo + totalLeche + totalTort
+        var descuento by remember { mutableStateOf(0.0) }
+        var envio by remember { mutableStateOf(0.0) }
+        fun vaciar(){
+            tortillasCant = 0
+            lecheCant = 0
+            huevoCant = 0
+            frijolCant = 0
+            descuento = 0.0
+            confirmado = false
+        }
+        Column(modifier = Modifier.fillMaxSize().fillMaxWidth().padding(16.dp)) {
+            Text("Tienda Don Pepe", fontSize = 35.sp)
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("tortillas 1kg", fontSize = 18.sp)
+                    Button(onClick = {if (tortillasCant < 10){tortillasCant++} }) {Text("+")}
+                    Box(modifier = Modifier.size(34.dp).background(Color.White, CircleShape).border(1.dp, color = Color.Black, shape = CircleShape) ,contentAlignment = Alignment.Center) {
+                        Text(text = tortillasCant.toString())
+                    }
+                    Button(onClick = {if (tortillasCant > 0){tortillasCant--} }) {Text("-")}
+
+                    }
+                Text("$24.00 c/u", color = Color.LightGray, fontSize = 14.sp)
+                } //Column tortillas
+            HorizontalDivider(color = Color.LightGray)
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Leche 1lt", fontSize = 18.sp)
+                    Button(onClick = {if ( lecheCant< 10){lecheCant++} }) {Text("+")}
+                    Box(modifier = Modifier.size(34.dp).background(Color.White, CircleShape).border(1.dp, color = Color.Black, shape = CircleShape) ,contentAlignment = Alignment.Center) {
+                        Text(text = lecheCant.toString())
+                    }
+                    Button(onClick = {if (lecheCant > 0){lecheCant--} }) {Text("-")}
+
+                    }
+                Text("$27.50", color = Color.LightGray, fontSize = 14.sp)
+                } //Column leche
+            HorizontalDivider(color = Color.LightGray)
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Huevo 12pz", fontSize = 18.sp)
+                    Button(onClick = {if ( huevoCant< 10){huevoCant++} }) {Text("+")}
+                    Box(modifier = Modifier.size(34.dp).background(Color.White, CircleShape).border(1.dp, color = Color.Black, shape = CircleShape) ,contentAlignment = Alignment.Center) {
+                        Text(text = huevoCant.toString())
+                    }
+                    Button(onClick = {if (huevoCant > 0){huevoCant--} }) {Text("-")}
+
+                }
+                Text("$52.00", color = Color.LightGray, fontSize = 14.sp)
+            } //Column huevo
+            HorizontalDivider(color = Color.LightGray)
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Frijol 1 kg", fontSize = 18.sp)
+                    Button(onClick = {if ( frijolCant< 10){frijolCant++} }) {Text("+")}
+                    Box(modifier = Modifier.size(34.dp).background(Color.White, CircleShape).border(1.dp, color = Color.Black, shape = CircleShape) ,contentAlignment = Alignment.Center) {
+                        Text(text = frijolCant.toString())
+                    }
+                    Button(onClick = {if (frijolCant > 0){frijolCant--} }) {Text("-")}
+
+                }
+                Text("$38.00", color = Color.LightGray, fontSize = 14.sp)
+            } //Column leche
+            HorizontalDivider(color = Color.LightGray)
+            if(subTotal >= 200.00 ){
+                descuento = subTotal * 0.10
+            }
+            if (subTotal >= 150.00) {
+                envio = 0.0
+            } else {
+                envio = 25.0
+            }
+            var totalFinal = subTotal - descuento + envio
+            var articulos = tortillasCant + lecheCant + huevoCant + frijolCant
+            Column(modifier = Modifier.fillMaxWidth().padding(5.dp ,10.dp).background(color = Color.LightGray, RoundedCornerShape(10.dp))) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Articulos : ", fontSize = 20.sp)
+                    Text("$articulos", fontSize = 20.sp)
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Subtotal : ", fontSize = 20.sp)
+                    Text("$subTotal", fontSize = 20.sp)
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Descuento : ", fontSize = 20.sp)
+                    Text("$descuento", fontSize = 20.sp)
+                }
+                Row(modifier = Modifier.fillMaxWidth().padding(0.dp, 0.dp, 0.dp, 20.dp ), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(text = "Envio : ", fontSize = 20.sp)
+                    Text(text = if (subTotal >= 150) "GRATIS" else "25.00", fontSize = 20.sp )
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Total: ", fontSize = 40.sp, color = Color.Green)
+                    Text("$totalFinal", fontSize = 40.sp, color = Color.Green)
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Button(onClick = {vaciar()}, modifier = Modifier) { Text("Vaciar", color = Color.Black)}
+                Button(onClick = {if(articulos > 0){confirmado = true} } ,modifier = Modifier.background(color = Color.White)) { Text("Confirmar pedido", color = Color.Black)}
+            } //Row botones de abajo
+            if (confirmado){
+                Text("Pedido confirmado")
+            }
+            } // Column principal
         }
 
-        Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-            Text("Biblioteca Central", fontSize = 25.sp)
-            Text("Sala de estudio • capacidad 50", fontSize = 14.sp)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Gray)
-                    .border(2.dp, Color.DarkGray, RoundedCornerShape(8.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("$actuales / 50", fontSize = 50.sp, color = colorAforo)
-                Text("personas en la sala", textAlign = TextAlign.Center)
-                LinearProgressIndicator(
-                    progress = { porcentaje },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = colorAforo
-                )
-                Text("${(porcentaje * 100).toInt()} % de ocupación", color = colorAforo)
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = {
-                        if (actuales < 50) {
-                            actuales = actuales + 1
-                            visitasDelDia = visitasDelDia + 1
-                        }
-                    },
-                    enabled = actuales < 50,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Entra")
-                }
-
-                Button(
-                    onClick = {
-                        if (actuales > 0) {
-                            actuales = actuales - 1
-                        }
-                    },
-                    enabled = actuales > 0,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Sale", color = Color.White)
-                }
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(8.dp).clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF1EAF7)).padding(12.dp)
-            ) {
-                Text("Visitas del día: $visitasDelDia", fontSize = 20.sp)
-            }
-
-
-            Button(
-                onClick = {
-                    actuales = 0
-                    visitasDelDia = 0
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cerrar día")
-            }
-        }
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun ver() {
-        aforoScreen()
-    }
+@Preview(showBackground = true)
+@Composable
+fun ver() {
+    tienda()
 }
