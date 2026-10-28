@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,99 +45,64 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            aforoScreen()
+            incripcionesScreen()
         }
-    }
-
-    @Composable
-    fun aforoScreen() {
-        var actuales by remember { mutableStateOf(0) }
-        var visitasDelDia by remember { mutableStateOf(0) }
-        val porcentaje = actuales / 50f
-        val colorAforo = when {
-            porcentaje < 0.70f -> Color(0xFF2E7D32)
-            porcentaje < 1.0f -> Color(0xFFFFA000)
-            else -> Color(0xFFC62828)
-        }
-
-        Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-            Text("Biblioteca Central", fontSize = 25.sp)
-            Text("Sala de estudio • capacidad 50", fontSize = 14.sp)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Gray)
-                    .border(2.dp, Color.DarkGray, RoundedCornerShape(8.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("$actuales / 50", fontSize = 50.sp, color = colorAforo)
-                Text("personas en la sala", textAlign = TextAlign.Center)
-                LinearProgressIndicator(
-                    progress = { porcentaje },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = colorAforo
-                )
-                Text("${(porcentaje * 100).toInt()} % de ocupación", color = colorAforo)
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = {
-                        if (actuales < 50) {
-                            actuales = actuales + 1
-                            visitasDelDia = visitasDelDia + 1
-                        }
-                    },
-                    enabled = actuales < 50,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Entra")
-                }
-
-                Button(
-                    onClick = {
-                        if (actuales > 0) {
-                            actuales = actuales - 1
-                        }
-                    },
-                    enabled = actuales > 0,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Sale", color = Color.White)
-                }
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(8.dp).clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF1EAF7)).padding(12.dp)
-            ) {
-                Text("Visitas del día: $visitasDelDia", fontSize = 20.sp)
-            }
-
-
-            Button(
-                onClick = {
-                    actuales = 0
-                    visitasDelDia = 0
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cerrar día")
-            }
-        }
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun ver() {
-        aforoScreen()
     }
 }
-//Aforo biblioteca
+
+@Composable
+fun incripcionesScreen() {
+    var nombre by remember { mutableStateOf("") }
+    val nombreValido = nombre.trim().length >= 3
+    var correo by remember { mutableStateOf("") }
+    val correoValido = correo.contains("@") && correo.contains(".")
+    var edad by remember { mutableStateOf("") }
+    val edadNumero = edad.toIntOrNull()
+    val edadValida = edadNumero != null && edadNumero in 12..99
+    var taller by remember { mutableStateOf("Fotografia") }
+    var expandido by remember { mutableStateOf(false) }
+    var intentoEnvio by remember { mutableStateOf(false) }
+    var privacidad by remember { mutableStateOf(false) }
+    var inscrito by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxSize().padding(10.dp, 50.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (inscrito) {
+            Text("Te has inscrito correctamente", fontSize = 25.sp, color = Color.Green)
+            Text("Resumen de tu inscripción", fontSize = 20.sp)
+            Text("Nombre: $nombre")
+            Text("Correo: $correo")
+            Text("Edad: $edad")
+            Text("Taller: $taller")
+            Button(onClick = { nombre = ""; correo = ""; edad = ""; taller = "Fotografia"; privacidad = false; intentoEnvio = false; inscrito = false }, modifier = Modifier.fillMaxWidth()) { Text("Nueva inscripción") }
+        } else {
+            Text("Incripciones a talleres", fontSize = 30.sp)
+            Text("Casa de lago       •cupo limitado")
+            OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre completo") }, modifier = Modifier.fillMaxWidth())
+            if (intentoEnvio && !nombreValido) { Text("Nombre no valido") }
+            OutlinedTextField(value = correo, onValueChange = { correo = it }, label = { Text("Correo") }, modifier = Modifier.fillMaxWidth())
+            if (intentoEnvio && !correoValido) { Text("Correo no valido") }
+            OutlinedTextField(value = edad, onValueChange = { edad = it }, label = { Text("Edad") }, modifier = Modifier.fillMaxWidth())
+            if (intentoEnvio && !edadValida) { Text("Edad no valida") }
+            Box {
+                Text(text = "$taller", modifier = Modifier.clickable { expandido = !expandido })
+                DropdownMenu(expanded = expandido, onDismissRequest = { expandido = false }) {
+                    DropdownMenuItem(text = { Text("Fotografia") }, onClick = { taller = "Fotografia"; expandido = false })
+                    DropdownMenuItem(text = { Text("Pintura") }, onClick = { taller = "Pintura"; expandido = false })
+                    DropdownMenuItem(text = { Text("Guitarra") }, onClick = { taller = "Guitarra"; expandido = false })
+                }
+            }
+            Row {
+                Checkbox(checked = privacidad, onCheckedChange = { privacidad = it })
+                Text("Acepto avsio de privacidad")
+            }
+            if (intentoEnvio && !privacidad) { Text("Acepta los terminos de privacidad para continuar") }
+            Button(onClick = { intentoEnvio = true; if (edadValida && privacidad && nombreValido && correoValido) { inscrito = true } }, modifier = Modifier.fillMaxWidth()) { Text("Inscribirme") }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ver() {
+    incripcionesScreen()
+}
