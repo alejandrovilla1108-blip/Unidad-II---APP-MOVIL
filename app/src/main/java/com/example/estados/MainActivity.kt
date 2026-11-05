@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,12 +26,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -47,11 +54,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.estados.ui.theme.EstadosTheme
+import java.nio.file.WatchEvent
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,89 +73,95 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-data class Tarea(
-    val nombre: String,
-    var prioridad: String,
-    var completada: Boolean = false
-)
+
 @Composable
-fun practica(){
-    var nuevaTarea by remember { mutableStateOf("") }
-    val tareas = remember { mutableStateListOf<Tarea>() }
-    var prioridadSeleccionada by remember {mutableStateOf("Alta")}
-    var filtroSeleccionado by remember { mutableStateOf("Todas") }
-    Column(modifier = Modifier.fillMaxSize().padding(20.dp, 20.dp, 20.dp)) {
-        Text("Mis pendientes", fontSize = 35.sp)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            OutlinedTextField(value = nuevaTarea, onValueChange ={nuevaTarea = it}, label = {Text("Nueva tarea")}, modifier = Modifier.weight(1f))
-            Button(onClick = {if (nuevaTarea.isNotBlank()){tareas.add(Tarea(nuevaTarea, prioridadSeleccionada))
-            nuevaTarea = ""} }) {Text("+", fontSize = 35.sp)}
-        } //Row de Outline
-        Row(modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(0.750f), horizontalArrangement = Arrangement.SpaceBetween) {
-            FilterChip(
-                selected = prioridadSeleccionada == "Alta",
-                onClick = {prioridadSeleccionada = "Alta"},
-                label = {Text("Alta")}
-            )
-            FilterChip(
-                selected = prioridadSeleccionada == "Media",
-                onClick = {prioridadSeleccionada = "Media"},
-                label = {Text("Media")}
-            )
-            FilterChip(
-                selected = prioridadSeleccionada == "Baja",
-                onClick = {prioridadSeleccionada = "Baja"},
-                label = {Text("Baja")}
-            )
-        } //ROw de prioridades
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            FilterChip(
-                selected = filtroSeleccionado == "Todas",
-                onClick = {filtroSeleccionado = "Todas"},
-                label = {Text("Todas")}
-            )
-            FilterChip(
-                selected = filtroSeleccionado == "Pendientes",
-                onClick = {filtroSeleccionado = "Pendientes"},
-                label = {Text("Pendientes")}
-            )
-            FilterChip(
-                selected = filtroSeleccionado == "Hechas",
-                onClick = {filtroSeleccionado = "Hechas"},
-                label = {Text("Hechas")}
-            )
-        } // Prioridades
-        val tareasFiltradas = tareas.filter {
-            when (filtroSeleccionado){
-                "Pendientes" -> !it.completada
-                "Hechas" -> it.completada
-                else -> true
+fun practica() {
+    var correo by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var intentos by remember { mutableStateOf(0) }
+    var show by remember { mutableStateOf(false) }
+    var login by remember { mutableStateOf(false) }
+    var recordar by remember { mutableStateOf(false) }
+    val correoIngreso = "clinicaVida@gmail.com"
+    val passwordIngreso = "COntraseña123"
+    if (login) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = "¡Bienvenido!", fontSize = 30.sp)
+            Text(text = correo, fontSize = 18.sp, color = Color.Gray)
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(onClick = {
+                login = false
+                correo = ""
+                password = ""
+                intentos = 0
+            }) {
+                Text("Cerrar sesión")
             }
         }
-        LazyColumn (modifier = Modifier.weight(1f)){
-            items(tareasFiltradas) {
-                Row(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = it.completada, onCheckedChange = { marcada -> val index = tareas.indexOf(it)
-                        tareas[index] = it.copy(completada = marcada) })
-                    Column() {
-                        Text(text = it.nombre, fontSize = 25.sp)
-                        Text(text = it.prioridad, fontSize = 15.sp)
+    } else {
+        Column(modifier = Modifier.padding(5.dp).fillMaxSize()) {
+            Text(
+                text = "Clinica Vida",
+                fontSize = 50.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+            OutlinedTextField(
+                value = correo,
+                onValueChange = { correo = it },
+                label = { Text("Correo electronico") })
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = if (show)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { show = !show }) {
+                        Icon(
+                            imageVector = if (show) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = null
+                        )
                     }
                 }
+            ) //OutLine del password
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Checkbox(checked = recordar, onCheckedChange = { recordar = it })
+                Text("Recordarme")
             }
-        } // LazyColumn
-        val completadas = tareas.count() {it.completada}
-        val total = tareas.size
-        HorizontalDivider(color = Color.LightGray)
-        Text(
-            text = "$completadas de $total completadas",
-            fontSize = 18.sp
-        )
-        Button(onClick ={tareas.removeAll{it.completada}}, modifier = Modifier.fillMaxWidth()) {Text("Borrar completadas")}
-
-    } //Column principal
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                if (correoIngreso == correo && passwordIngreso == password) {
+                    login = true
+                } else intentos++
+            }, enabled = intentos < 3, modifier = Modifier.fillMaxWidth()) { Text("Entrar") }
+            if (intentos > 0 && intentos < 3 && !login) {
+                Text(
+                    text = "Corro y/o contraseñas incorrectos (te quedan $intentos de 3)",
+                    color = Color.Red,
+                    fontSize = 14.sp
+                )
+            }
+            if (intentos >= 3) {
+                Text(
+                    text = "Has superado el límite de 3 intentos fallidos. Intenta más tarde.",
+                    color = Color.Red,
+                    fontSize = 14.sp
+                )
+            }
+        } //Column principal
+    }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun ver() {
