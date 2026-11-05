@@ -1,12 +1,16 @@
 package com.example.estados
 
+import android.R
 import android.R.attr.enabled
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,13 +18,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,6 +45,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,98 +58,95 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            aforoScreen()
+            practica()
         }
     }
-
-    @Composable
-    fun aforoScreen() {
-        var actuales by remember { mutableStateOf(0) }
-        var visitasDelDia by remember { mutableStateOf(0) }
-        val porcentaje = actuales / 50f
-        val colorAforo = when {
-            porcentaje < 0.70f -> Color(0xFF2E7D32)
-            porcentaje < 1.0f -> Color(0xFFFFA000)
-            else -> Color(0xFFC62828)
-        }
-
-        Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-            Text("Biblioteca Central", fontSize = 25.sp)
-            Text("Sala de estudio • capacidad 50", fontSize = 14.sp)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Gray)
-                    .border(2.dp, Color.DarkGray, RoundedCornerShape(8.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("$actuales / 50", fontSize = 50.sp, color = colorAforo)
-                Text("personas en la sala", textAlign = TextAlign.Center)
-                LinearProgressIndicator(
-                    progress = { porcentaje },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = colorAforo
-                )
-                Text("${(porcentaje * 100).toInt()} % de ocupación", color = colorAforo)
+}
+data class Tarea(
+    val nombre: String,
+    var prioridad: String,
+    var completada: Boolean = false
+)
+@Composable
+fun practica(){
+    var nuevaTarea by remember { mutableStateOf("") }
+    val tareas = remember { mutableStateListOf<Tarea>() }
+    var prioridadSeleccionada by remember {mutableStateOf("Alta")}
+    var filtroSeleccionado by remember { mutableStateOf("Todas") }
+    Column(modifier = Modifier.fillMaxSize().padding(20.dp, 20.dp, 20.dp)) {
+        Text("Mis pendientes", fontSize = 35.sp)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            OutlinedTextField(value = nuevaTarea, onValueChange ={nuevaTarea = it}, label = {Text("Nueva tarea")}, modifier = Modifier.weight(1f))
+            Button(onClick = {if (nuevaTarea.isNotBlank()){tareas.add(Tarea(nuevaTarea, prioridadSeleccionada))
+            nuevaTarea = ""} }) {Text("+", fontSize = 35.sp)}
+        } //Row de Outline
+        Row(modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(0.750f), horizontalArrangement = Arrangement.SpaceBetween) {
+            FilterChip(
+                selected = prioridadSeleccionada == "Alta",
+                onClick = {prioridadSeleccionada = "Alta"},
+                label = {Text("Alta")}
+            )
+            FilterChip(
+                selected = prioridadSeleccionada == "Media",
+                onClick = {prioridadSeleccionada = "Media"},
+                label = {Text("Media")}
+            )
+            FilterChip(
+                selected = prioridadSeleccionada == "Baja",
+                onClick = {prioridadSeleccionada = "Baja"},
+                label = {Text("Baja")}
+            )
+        } //ROw de prioridades
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            FilterChip(
+                selected = filtroSeleccionado == "Todas",
+                onClick = {filtroSeleccionado = "Todas"},
+                label = {Text("Todas")}
+            )
+            FilterChip(
+                selected = filtroSeleccionado == "Pendientes",
+                onClick = {filtroSeleccionado = "Pendientes"},
+                label = {Text("Pendientes")}
+            )
+            FilterChip(
+                selected = filtroSeleccionado == "Hechas",
+                onClick = {filtroSeleccionado = "Hechas"},
+                label = {Text("Hechas")}
+            )
+        } // Prioridades
+        val tareasFiltradas = tareas.filter {
+            when (filtroSeleccionado){
+                "Pendientes" -> !it.completada
+                "Hechas" -> it.completada
+                else -> true
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = {
-                        if (actuales < 50) {
-                            actuales = actuales + 1
-                            visitasDelDia = visitasDelDia + 1
-                        }
-                    },
-                    enabled = actuales < 50,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Entra")
+        }
+        LazyColumn (modifier = Modifier.weight(1f)){
+            items(tareasFiltradas) {
+                Row(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = it.completada, onCheckedChange = { marcada -> val index = tareas.indexOf(it)
+                        tareas[index] = it.copy(completada = marcada) })
+                    Column() {
+                        Text(text = it.nombre, fontSize = 25.sp)
+                        Text(text = it.prioridad, fontSize = 15.sp)
+                    }
                 }
-
-                Button(
-                    onClick = {
-                        if (actuales > 0) {
-                            actuales = actuales - 1
-                        }
-                    },
-                    enabled = actuales > 0,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Sale", color = Color.White)
-                }
             }
+        } // LazyColumn
+        val completadas = tareas.count() {it.completada}
+        val total = tareas.size
+        HorizontalDivider(color = Color.LightGray)
+        Text(
+            text = "$completadas de $total completadas",
+            fontSize = 18.sp
+        )
+        Button(onClick ={tareas.removeAll{it.completada}}, modifier = Modifier.fillMaxWidth()) {Text("Borrar completadas")}
 
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(8.dp).clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF1EAF7)).padding(12.dp)
-            ) {
-                Text("Visitas del día: $visitasDelDia", fontSize = 20.sp)
-            }
+    } //Column principal
+}
 
-
-            Button(
-                onClick = {
-                    actuales = 0
-                    visitasDelDia = 0
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cerrar día")
-            }
-        }
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun ver() {
-        aforoScreen()
-    }
+@Preview(showBackground = true)
+@Composable
+fun ver() {
+    practica()
 }
