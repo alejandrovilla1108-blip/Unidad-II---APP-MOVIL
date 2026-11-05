@@ -1,68 +1,40 @@
 package com.example.estados
 
-import android.R
-import android.R.attr.enabled
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.modifier.modifierLocalConsumer
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.estados.ui.theme.EstadosTheme
-import java.nio.file.WatchEvent
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,91 +47,133 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun practica() {
-    var correo by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var intentos by remember { mutableStateOf(0) }
-    var show by remember { mutableStateOf(false) }
-    var login by remember { mutableStateOf(false) }
-    var recordar by remember { mutableStateOf(false) }
-    val correoIngreso = "clinicaVida@gmail.com"
-    val passwordIngreso = "COntraseña123"
-    if (login) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+fun RatingBarSimple(
+    titulo: String,
+    rating: Int,
+    onRatingChange: (Int) -> Unit
+) {
+    val etiquetas = listOf("Malo", "Regular", "Bueno", "Muy bueno", "Excelente")
+    val texto = if (rating in 1..5) etiquetas[rating - 1] else ""
+
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(text = titulo, color = Color.Gray, fontSize = 14.sp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "¡Bienvenido!", fontSize = 30.sp)
-            Text(text = correo, fontSize = 18.sp, color = Color.Gray)
+            Row {
+                for (i in 1..5) {
+                    Icon(
+                        imageVector = if (i <= rating) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                        contentDescription = null,
+                        tint = if (i <= rating) Color(0xFFFFB800) else Color.Gray,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { onRatingChange(i) }
+                    )
+                }
+            }
+            Text(text = texto, color = Color(0xFF6750A4), fontSize = 14.sp)
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Button(onClick = {
-                login = false
-                correo = ""
-                password = ""
-                intentos = 0
-            }) {
-                Text("Cerrar sesión")
+@Composable
+fun practica() {
+    var comida by remember { mutableStateOf(0) }
+    var servicio by remember { mutableStateOf(0) }
+    var ambiente by remember { mutableStateOf(0) }
+    var comentario by remember { mutableStateOf("") }
+    var publicada by remember { mutableStateOf(false) }
+    var etiquetasSeleccionadas by remember { mutableStateOf(setOf<String>()) }
+    if (publicada) {
+        val promedio = (comida + servicio + ambiente) / 3.0
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            Text("comentario")
+            Box(modifier = Modifier.background(Color.LightGray)) {
+                Text(comentario)
+            }
+            Text("Etiquetas seleccionadas:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                etiquetasSeleccionadas.forEach { etiqueta ->
+                    Text(
+                        text = "• $etiqueta",
+                        fontSize = 14.sp,
+                        color = Color(0xFF6750A4)
+                    )
+                }
             }
         }
     } else {
-        Column(modifier = Modifier.padding(5.dp).fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Text(
-                text = "Clinica Vida",
-                fontSize = 50.sp,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                "Escribe tu reseña",
+                fontSize = 30.sp,
+                modifier = Modifier.padding(vertical = 15.dp)
             )
+            Text(
+                "Restaurante El mezquite",
+                fontSize = 20.sp,
+                modifier = Modifier.padding(vertical = 10.dp)
+            )
+            Text("Califica la experiencia", fontSize = 15.sp)
+
+            RatingBarSimple("Comida", rating = comida, onRatingChange = { comida = it })
+            RatingBarSimple("Servicio", rating = servicio, onRatingChange = { servicio = it })
+            RatingBarSimple("Ambiente", rating = ambiente, onRatingChange = { ambiente = it })
             OutlinedTextField(
-                value = correo,
-                onValueChange = { correo = it },
-                label = { Text("Correo electronico") })
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                visualTransformation = if (show)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { show = !show }) {
-                        Icon(
-                            imageVector = if (show) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = null
-                        )
-                    }
+                value = comentario,
+                onValueChange = { comentario = it },
+                label = { Text("Comentarios") },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+            ) {
+                listOf("Familiar", "Económico", "Rápido").forEach { etiqueta ->
+                    val estaSeleccionada = etiquetasSeleccionadas.contains(etiqueta)
+                    FilterChip(
+                        selected = estaSeleccionada,
+                        onClick = {
+                            etiquetasSeleccionadas =
+                                if (estaSeleccionada) etiquetasSeleccionadas - etiqueta else etiquetasSeleccionadas + etiqueta
+                        },
+                        label = { Text(etiqueta) },
+                        leadingIcon = if (estaSeleccionada) {
+                            { Icon(imageVector = Icons.Default.Check, contentDescription = null) }
+                        } else null
+                    )
                 }
-            ) //OutLine del password
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Checkbox(checked = recordar, onCheckedChange = { recordar = it })
-                Text("Recordarme")
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                if (correoIngreso == correo && passwordIngreso == password) {
-                    login = true
-                } else intentos++
-            }, enabled = intentos < 3, modifier = Modifier.fillMaxWidth()) { Text("Entrar") }
-            if (intentos > 0 && intentos < 3 && !login) {
-                Text(
-                    text = "Corro y/o contraseñas incorrectos (te quedan $intentos de 3)",
-                    color = Color.Red,
-                    fontSize = 14.sp
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Romántico", "Vegetariano").forEach { etiqueta ->
+                    val estaSeleccionada = etiquetasSeleccionadas.contains(etiqueta)
+                    FilterChip(
+                        selected = estaSeleccionada,
+                        onClick = {
+                            etiquetasSeleccionadas =
+                                if (estaSeleccionada) etiquetasSeleccionadas - etiqueta else etiquetasSeleccionadas + etiqueta
+                        },
+                        label = { Text(etiqueta) },
+                        leadingIcon = if (estaSeleccionada) {
+                            { Icon(imageVector = Icons.Default.Check, contentDescription = null) }
+                        } else null
+                    )
+                }
             }
-            if (intentos >= 3) {
-                Text(
-                    text = "Has superado el límite de 3 intentos fallidos. Intenta más tarde.",
-                    color = Color.Red,
-                    fontSize = 14.sp
-                )
+            val calificacionesValidas = comida > 0 && servicio > 0 && ambiente > 0
+            val comentarioValido = comentario.length >= 20
+
+            Button(
+                onClick = { publicada = true },
+                enabled = calificacionesValidas && comentarioValido,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Publicar")
             }
-        } //Column principal
+        } // Column principal
     }
 }
 @Preview(showBackground = true)
