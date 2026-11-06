@@ -4,37 +4,36 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Card
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,139 +44,96 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-@Composable
-fun RatingBarSimple(
-    titulo: String,
-    rating: Int,
-    onRatingChange: (Int) -> Unit
-) {
-    val etiquetas = listOf("Malo", "Regular", "Bueno", "Muy bueno", "Excelente")
-    val texto = if (rating in 1..5) etiquetas[rating - 1] else ""
-
-    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        Text(text = titulo, color = Color.Gray, fontSize = 14.sp)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row {
-                for (i in 1..5) {
-                    Icon(
-                        imageVector = if (i <= rating) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                        contentDescription = null,
-                        tint = if (i <= rating) Color(0xFFFFB800) else Color.Gray,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clickable { onRatingChange(i) }
-                    )
-                }
-            }
-            Text(text = texto, color = Color(0xFF6750A4), fontSize = 14.sp)
-        }
-    }
-}
-
+class Gasto(var concepto: String, var monto: Double, var categoria: String)
 @Composable
 fun practica() {
-    var comida by remember { mutableStateOf(0) }
-    var servicio by remember { mutableStateOf(0) }
-    var ambiente by remember { mutableStateOf(0) }
-    var comentario by remember { mutableStateOf("") }
-    var publicada by remember { mutableStateOf(false) }
-    var etiquetasSeleccionadas by remember { mutableStateOf(setOf<String>()) }
-    if (publicada) {
-        val promedio = (comida + servicio + ambiente) / 3.0
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Text("comentario")
-            Box(modifier = Modifier.background(Color.LightGray)) {
-                Text(comentario)
+    var ingresoTexto by remember { mutableStateOf("") }
+    val listaGastos = remember { mutableStateListOf<Gasto>() }
+    var conceptoInput by remember { mutableStateOf("") }
+    var montoInput by remember { mutableStateOf("") }
+    var categoriaInput by remember { mutableStateOf("") }
+
+    val ingreso = ingresoTexto.toDoubleOrNull() ?: 0.0
+    val totalGastado = listaGastos.sumOf { it.monto }
+    val saldo = ingreso - totalGastado
+    val porcentaje = if (ingreso > 0) (totalGastado / ingreso) * 100 else 0.0
+    val mayorCategoria = listaGastos.groupBy { it.categoria }.maxByOrNull { grupo -> grupo.value.sumOf { it.monto } }?.key ?: "Ninguna"
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text("Mi presupuesto", fontSize = 24.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(value = ingresoTexto, onValueChange = { ingresoTexto = it }, label = { Text("Ingreso mensual") }, modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column { Text("Gastado"); Text("$$totalGastado") }
+                    Column { Text("Saldo"); Text("$$saldo") }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(progress = { (porcentaje / 100).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("${porcentaje.toInt()}% usado - Mayor gasto: $mayorCategoria")
             }
-            Text("Etiquetas seleccionadas:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                etiquetasSeleccionadas.forEach { etiqueta ->
-                    Text(
-                        text = "• $etiqueta",
-                        fontSize = 14.sp,
-                        color = Color(0xFF6750A4)
-                    )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        if (porcentaje >= 100) {
+            Text("¡Alerta! Excediste el presupuesto por $${-saldo}", color = MaterialTheme.colorScheme.error)
+        } else if (porcentaje >= 80) {
+            Text("Cuidado: pasaste el 80%", color = MaterialTheme.colorScheme.error)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Nuevo gasto", fontSize = 18.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(value = conceptoInput, onValueChange = { conceptoInput = it }, label = { Text("Concepto") }, modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(value = montoInput, onValueChange = { montoInput = it }, label = { Text("Monto") }, modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedTextField(value = categoriaInput, onValueChange = { categoriaInput = it }, label = { Text("Categoría") }, modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        val esValido = conceptoInput.isNotBlank() && (montoInput.toDoubleOrNull() ?: 0.0) > 0.0
+
+        Button(
+            onClick = {
+                if (esValido) {
+                    listaGastos.add(Gasto(concepto = conceptoInput, monto = montoInput.toDouble(), categoria = categoriaInput))
+                    conceptoInput = ""
+                    montoInput = ""
+                }
+            },
+            enabled = esValido,
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Agregar gasto") }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Gastos recientes", fontSize = 18.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(listaGastos) { item ->
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        Text(item.concepto)
+                        Text(item.categoria, color = Color.Gray)
+                    }
+                    Row {
+                        Text("-$${item.monto}")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = { listaGastos.remove(item) }) { Text("X") }
+                    }
                 }
             }
         }
-    } else {
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Text(
-                "Escribe tu reseña",
-                fontSize = 30.sp,
-                modifier = Modifier.padding(vertical = 15.dp)
-            )
-            Text(
-                "Restaurante El mezquite",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(vertical = 10.dp)
-            )
-            Text("Califica la experiencia", fontSize = 15.sp)
-
-            RatingBarSimple("Comida", rating = comida, onRatingChange = { comida = it })
-            RatingBarSimple("Servicio", rating = servicio, onRatingChange = { servicio = it })
-            RatingBarSimple("Ambiente", rating = ambiente, onRatingChange = { ambiente = it })
-            OutlinedTextField(
-                value = comentario,
-                onValueChange = { comentario = it },
-                label = { Text("Comentarios") },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-            ) {
-                listOf("Familiar", "Económico", "Rápido").forEach { etiqueta ->
-                    val estaSeleccionada = etiquetasSeleccionadas.contains(etiqueta)
-                    FilterChip(
-                        selected = estaSeleccionada,
-                        onClick = {
-                            etiquetasSeleccionadas =
-                                if (estaSeleccionada) etiquetasSeleccionadas - etiqueta else etiquetasSeleccionadas + etiqueta
-                        },
-                        label = { Text(etiqueta) },
-                        leadingIcon = if (estaSeleccionada) {
-                            { Icon(imageVector = Icons.Default.Check, contentDescription = null) }
-                        } else null
-                    )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Romántico", "Vegetariano").forEach { etiqueta ->
-                    val estaSeleccionada = etiquetasSeleccionadas.contains(etiqueta)
-                    FilterChip(
-                        selected = estaSeleccionada,
-                        onClick = {
-                            etiquetasSeleccionadas =
-                                if (estaSeleccionada) etiquetasSeleccionadas - etiqueta else etiquetasSeleccionadas + etiqueta
-                        },
-                        label = { Text(etiqueta) },
-                        leadingIcon = if (estaSeleccionada) {
-                            { Icon(imageVector = Icons.Default.Check, contentDescription = null) }
-                        } else null
-                    )
-                }
-            }
-            val calificacionesValidas = comida > 0 && servicio > 0 && ambiente > 0
-            val comentarioValido = comentario.length >= 20
-
-            Button(
-                onClick = { publicada = true },
-                enabled = calificacionesValidas && comentarioValido,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Publicar")
-            }
-        } // Column principal
     }
 }
+
 @Preview(showBackground = true)
 @Composable
-fun ver() {
-    practica()
-}
+fun ver() { practica() }
